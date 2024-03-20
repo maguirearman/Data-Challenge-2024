@@ -1,0 +1,31 @@
+feature,feature_details
+heartrate,Heart Rate
+nbpdia,Non Invasive Blood Pressure diastolic
+nbpmean,Non Invasive Blood Pressure mean
+nbpsys,Non Invasive Blood Pressure systolic
+spo2,O2 saturation pulseoxymetry
+aniongap,Anion Gap
+bicarbonate,Bicarbonate
+calcium,"Calcium, Total"
+chloride,Chloride
+creatinine,Creatinine
+gcseye,GCS - Eye Opening
+gcsmotor,GCS - Motor Response
+gcsverbal,GCS - Verbal Response
+glucose,Glucose
+hematocrit,Hematocrit
+hemoglobin,Hemoglobin
+mch,MCH (Mean Corpuscular Hemoglobin)
+mcv,MCV (Mean Corpuscular Volume)
+magnesium,Magnesium
+neutrophils,Neutrophils
+phosphate,Phosphate
+platelet,Platelet Count
+potassium,Potassium
+rdw,RDW (Red Cell Distribution Width)
+rbc,Red Blood Cells
+resp,Respiratory Rate
+sodium,Sodium
+ureanitro,Urea Nitrogen
+vancomycin,Vancomycin
+wbc,White Blood Cells
