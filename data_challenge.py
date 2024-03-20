@@ -16,3 +16,5 @@ demographic_features = pd.get_dummies(demographic_features, columns=["gender", "
 # Display the extracted demographic features
 print("\nExtracted Demographic Features:")
 print(demographic_features.head())
+
+# Maguire comment
