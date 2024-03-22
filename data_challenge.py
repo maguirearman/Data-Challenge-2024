@@ -1,43 +1,64 @@
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 
-# Load the training demographics data
+# Load the training data
 train_demos_df = pd.read_csv("train/train_demos.csv")
-
-# Display the first few rows of the demographics data
-# print("Demographics Data:")
-# print(train_demos_df.head())
-
-# Extract demographic features
-demographic_features = train_demos_df[["age", "gender", "ethnicity", "marital_status"]]
-
-# Perform one-hot encoding for categorical variables (gender, ethnicity, marital_status)
-demographic_features = pd.get_dummies(demographic_features, columns=["gender", "ethnicity", "marital_status"])
-
-# Display the extracted demographic features
-# print("\nExtracted Demographic Features:")
-# print(demographic_features.head())
-
 train_signs_df = pd.read_csv("train/train_signs.csv")
+train_radiology_df = pd.read_csv("train/train_radiology.csv")
+train_labels_df = pd.read_csv("train/train_labels.csv")
+
+#Load the testing data
+test_demos_df = pd.read_csv("test/test_demos.csv")
+test_signs_df = pd.read_csv("test/test_signs.csv")
+test_radiology_df = pd.read_csv("test/test_radiology.csv")
 
 # Define healthy range for heart rate
 healthy_min = 60
 healthy_max = 100
 
-# Create a dictionary to store patient IDs and their corresponding flag
-patient_flags = {}
+
+# Get all unique patient IDs from train_demos
+all_patient_ids = train_demos_df['patient_id'].unique()
+
+# Initialize feature vector with all patient IDs and set flags to None initially
+feature_vector = pd.DataFrame({'patient_id': all_patient_ids, 'flag': None})
 
 # Iterate through each patient's heart rate measurements
 for patient_id, patient_data in train_signs_df.groupby('patient_id'):
-    # Check if any heart rate measurement is outside the healthy range
-    if (patient_data['heartrate'] < healthy_min).any() or (patient_data['heartrate'] > healthy_max).any():
-        # If any heart rate measurement is outside the healthy range, set flag to 1
-        patient_flags[patient_id] = 1
-    else:
-        # Otherwise, set flag to 0
-        patient_flags[patient_id] = 0
+    # Check if there are any heart rate measurements for the patient
+    if 'heartrate' in patient_data.columns:
+        # Check if any heart rate measurement is outside the healthy range
+        if (patient_data['heartrate'] < healthy_min).any() or (patient_data['heartrate'] > healthy_max).any():
+            feature_vector.loc[feature_vector['patient_id'] == patient_id, 'flag'] = 1  # If any heart rate measurement is outside the healthy range, set flag to 1
+        else:
+            feature_vector.loc[feature_vector['patient_id'] == patient_id, 'flag'] = 0  # Otherwise, set flag to 0
 
-# Create a DataFrame from the patient flags dictionary
-feature_vector = pd.DataFrame({'patient_id': list(patient_flags.keys()), 'flag': list(patient_flags.values())})
+
+
+# Merge feature vector with labels
+feature_vector_with_labels = pd.merge(feature_vector, train_labels_df, on='patient_id')
+
 
 print("Feature vector:")
-print(feature_vector)
+print(feature_vector_with_labels.head())    
+
+# Prepare features (flag) and labels
+X = feature_vector_with_labels[['flag']].values
+y = feature_vector_with_labels['label'].values
+
+# Split the data into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train the model (Logistic Regression)
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Predict probabilities for the test set
+y_pred_proba = model.predict_proba(X_test)[:, 1]
+
+# Calculate AUROC score
+auroc_score = roc_auc_score(y_test, y_pred_proba)
+
+print("AUROC Score:", auroc_score)
