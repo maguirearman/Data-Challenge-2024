@@ -47,7 +47,7 @@ labels = []
 for patient_id in train_demos_df['patient_id'].unique():
     # Retrieve the patient's flags and label
     flags = patient_flags.get(patient_id, {'hr_flag': 0, 'resp_flag': 0})
-    label = train_labels_df[train_labels_df['patient_id'] == patient_id]['mortality'].iloc[0]
+    label = train_labels_df[train_labels_df['patient_id'] == patient_id]['label'].iloc[0]
     features.append([flags['hr_flag'], flags['resp_flag']])
     labels.append(label)
 
