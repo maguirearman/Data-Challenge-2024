@@ -1,7 +1,9 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
+
 
 # Load the training data
 train_demos_df = pd.read_csv("train/train_demos.csv")
@@ -14,60 +16,54 @@ test_demos_df = pd.read_csv("test/test_demos.csv")
 test_signs_df = pd.read_csv("test/test_signs.csv")
 test_radiology_df = pd.read_csv("test/test_radiology.csv")
 
-# Define healthy range for heart rate
-healthy_hr_min = 60
-healthy_hr_max = 100
+# Define healthy range for heart rate and respiratory rate
+healthy_hr_min, healthy_hr_max = 60, 100
+healthy_resp_min, healthy_resp_max = 12, 25
 
-# Get all unique patient IDs from train_demos
-all_patient_ids = train_demos_df['patient_id'].unique()
+# Initialize a dictionary to store patient flags
+patient_flags = {}
 
-# Initialize feature vector with all patient IDs and set flags to None initially
-feature_vector = pd.DataFrame({'patient_id': all_patient_ids, 'hr_flag': None, 'resp_flag': None, 'flag': None})
+# Process each patient's data
+for patient_id in train_demos_df['patient_id'].unique():
+    patient_data = train_signs_df[train_signs_df['patient_id'] == patient_id]
+    hr_flag = 0
+    resp_flag = 0
+    
+    # Check heart rate condition
+    if not patient_data[patient_data['heartrate'].notna() & ((patient_data['heartrate'] < healthy_hr_min) | (patient_data['heartrate'] > healthy_hr_max))].empty:
+        hr_flag = 1
+    
+    # Check respiratory rate condition
+    if not patient_data[patient_data['resp'].notna() & ((patient_data['resp'] < healthy_resp_min) | (patient_data['resp'] > healthy_resp_max))].empty:
+        resp_flag = 1
+    
+    # Store flags for each patient
+    patient_flags[patient_id] = {'hr_flag': hr_flag, 'resp_flag': resp_flag}
 
-# Iterate through each patient's heart rate measurements
-for patient_id, patient_data in train_signs_df.groupby('patient_id'):
-    # Check if there are any heart rate measurements for the patient
-    if 'heartrate' in patient_data.columns:
-        # Check if any heart rate measurement is outside the healthy range
-        if (patient_data['heartrate'] < healthy_hr_min).any() or (patient_data['heartrate'] > healthy_hr_max).any():
-            feature_vector.loc[feature_vector['patient_id'] == patient_id, 'hr_flag'] = 1  # If any heart rate measurement is outside the healthy range, set flag to 1
-        else:
-            feature_vector.loc[feature_vector['patient_id'] == patient_id, 'hr_flag'] = 0  # Otherwise, set flag to 0
+# Create a list of features and labels
+features = []
+labels = []
 
-# Define healthy range for respiratory rate
-healthy_resp_min = 12
-healthy_resp_max = 25
+for patient_id in train_demos_df['patient_id'].unique():
+    # Retrieve the patient's flags and label
+    flags = patient_flags.get(patient_id, {'hr_flag': 0, 'resp_flag': 0})
+    label = train_labels_df[train_labels_df['patient_id'] == patient_id]['mortality'].iloc[0]
+    features.append([flags['hr_flag'], flags['resp_flag']])
+    labels.append(label)
 
-# Iterate through each patient's respiratory rate measurements
-for patient_id, patient_data in train_signs_df.groupby('patient_id'):
-    # Check if there are any respiratory rate measurements for the patient
-    if 'resp' in patient_data.columns:
-        # Check if any respiratory rate measurement is outside the healthy range
-        if (patient_data['resp'] < healthy_resp_min).any() or (patient_data['resp'] > healthy_resp_max).any():
-            feature_vector.loc[feature_vector['patient_id'] == patient_id, 'resp_flag'] = 1  # If any respiratory rate measurement is outside the healthy range, set flag to 1
-        else:
-            feature_vector.loc[feature_vector['patient_id'] == patient_id, 'resp_flag'] = 0  # Otherwise, set flag to 0
+# Convert lists to NumPy arrays for modeling
+X = np.array(features)
+y = np.array(labels, dtype=int)
 
-# Merge feature vector with labels
-feature_vector_with_labels = pd.merge(feature_vector, train_labels_df, on='patient_id')
-
-print("Feature vector with respiratory rate flags:")
-print(feature_vector_with_labels.head()) 
-
-# Prepare features (flags) and labels
-X = feature_vector_with_labels[['hr_flag', 'resp_flag']].values
-y = feature_vector_with_labels['flag'].values
-# Split the data into train and test sets
+# Split the data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train the model (Logistic Regression)
+# Train the model
 model = LogisticRegression()
 model.fit(X_train, y_train)
 
-# Predict probabilities for the test set
+# Predict and evaluate
 y_pred_proba = model.predict_proba(X_test)[:, 1]
-
-# Calculate AUROC score
 auroc_score = roc_auc_score(y_test, y_pred_proba)
 
 print("AUROC Score:", auroc_score)
