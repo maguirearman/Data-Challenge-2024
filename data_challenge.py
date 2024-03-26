@@ -21,19 +21,24 @@ healthy_hr_min, healthy_hr_max = 60, 100
 healthy_resp_min, healthy_resp_max = 12, 25
 healthy_nbp_sys_min, healthy_nbp_sys_max = 90, 140
 spo2_threshold = 90
+healthy_nbpdia_min, healthy_nbpdia_max = 70, 90
+nbpmean_threshold_min, nbpmean_threshold_max = 70, 105 
+
 # Process training data to calculate flags
 flags_df = train_signs_df.groupby('patient_id').agg({
     'heartrate': lambda hr: ((hr < healthy_hr_min) | (hr > healthy_hr_max)).any().astype(int),
     'resp': lambda r: ((r < healthy_resp_min) | (r > healthy_resp_max)).any().astype(int),
     'nbpsys': lambda nbp: ((nbp < healthy_nbp_sys_min) | (nbp > healthy_nbp_sys_max)).any().astype(int),
-    'spo2': lambda s: (s < spo2_threshold).any().astype(int)
+    'spo2': lambda s: (s < spo2_threshold).any().astype(int),
+    'nbpdia': lambda dia: ((dia < healthy_nbpdia_min) | (dia > healthy_nbpdia_max)).any().astype(int), 
+    'nbpmean': lambda mean: ((mean < nbpmean_threshold_min) | (mean > nbpmean_threshold_max)).any().astype(int) 
 }).reset_index()
 
 # Merge flags with labels
 features_df = pd.merge(flags_df, train_labels_df, on='patient_id', how='left')
 
 # Prepare features and labels for modeling
-X = features_df[['heartrate', 'resp', 'nbpsys', 'spo2']].to_numpy()
+X = features_df[['heartrate', 'resp', 'nbpsys', 'spo2', 'nbpdia', 'nbpmean']].to_numpy()
 y = features_df['label'].to_numpy().astype(int)
 
 # Split the data for internal validation
