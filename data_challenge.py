@@ -19,6 +19,8 @@ test_radiology_df = pd.read_csv("test/test_radiology.csv")
 # Define healthy range for heart rate and respiratory rate
 healthy_hr_min, healthy_hr_max = 60, 100
 healthy_resp_min, healthy_resp_max = 12, 25
+# Define healthy range for NBP Sys
+healthy_nbp_sys_min, healthy_nbp_sys_max = 90, 140
 
 # Initialize a dictionary to store patient flags
 patient_flags = {}
@@ -26,29 +28,30 @@ patient_flags = {}
 # Process each patient's data
 for patient_id in train_demos_df['patient_id'].unique():
     patient_data = train_signs_df[train_signs_df['patient_id'] == patient_id]
-    hr_flag = 0
-    resp_flag = 0
+    hr_flag = resp_flag = nbp_sys_flag = 0
     
-    # Check heart rate condition
+    # Existing checks for heart rate and respiratory rate
     if not patient_data[patient_data['heartrate'].notna() & ((patient_data['heartrate'] < healthy_hr_min) | (patient_data['heartrate'] > healthy_hr_max))].empty:
         hr_flag = 1
-    
-    # Check respiratory rate condition
     if not patient_data[patient_data['resp'].notna() & ((patient_data['resp'] < healthy_resp_min) | (patient_data['resp'] > healthy_resp_max))].empty:
         resp_flag = 1
     
+    # New check for NBP Sys
+    if not patient_data[patient_data['nbpsys'].notna() & ((patient_data['nbpsys'] < healthy_nbp_sys_min) | (patient_data['nbpsys'] > healthy_nbp_sys_max))].empty:
+        nbp_sys_flag = 1
+    
     # Store flags for each patient
-    patient_flags[patient_id] = {'hr_flag': hr_flag, 'resp_flag': resp_flag}
+    patient_flags[patient_id] = {'hr_flag': hr_flag, 'resp_flag': resp_flag, 'nbp_sys_flag': nbp_sys_flag}
+
 
 # Create a list of features and labels
 features = []
 labels = []
 
 for patient_id in train_demos_df['patient_id'].unique():
-    # Retrieve the patient's flags and label
-    flags = patient_flags.get(patient_id, {'hr_flag': 0, 'resp_flag': 0})
-    label = train_labels_df[train_labels_df['patient_id'] == patient_id]['label'].iloc[0]
-    features.append([flags['hr_flag'], flags['resp_flag']])
+    flags = patient_flags.get(patient_id, {'hr_flag': 0, 'resp_flag': 0, 'nbp_sys_flag': 0})
+    label = train_labels_df[train_labels_df['patient_id'] == patient_id]['label'].iloc[0]  # Ensure correct label column name
+    features.append([flags['hr_flag'], flags['resp_flag'], flags['nbp_sys_flag']])
     labels.append(label)
 
 # Convert lists to NumPy arrays for modeling
