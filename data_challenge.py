@@ -16,65 +16,34 @@ test_demos_df = pd.read_csv("test/test_demos.csv")
 test_signs_df = pd.read_csv("test/test_signs.csv")
 test_radiology_df = pd.read_csv("test/test_radiology.csv")
 
-# Define healthy range for heart rate and respiratory rate
+# Define thresholds
 healthy_hr_min, healthy_hr_max = 60, 100
 healthy_resp_min, healthy_resp_max = 12, 25
-# Define healthy range for NBP Sys
 healthy_nbp_sys_min, healthy_nbp_sys_max = 90, 140
-# Define a threshold for SpO2. Values below this might be considered low
-spo2_threshold = 95
+spo2_threshold = 90
+# Process training data to calculate flags
+flags_df = train_signs_df.groupby('patient_id').agg({
+    'heartrate': lambda hr: ((hr < healthy_hr_min) | (hr > healthy_hr_max)).any().astype(int),
+    'resp': lambda r: ((r < healthy_resp_min) | (r > healthy_resp_max)).any().astype(int),
+    'nbpsys': lambda nbp: ((nbp < healthy_nbp_sys_min) | (nbp > healthy_nbp_sys_max)).any().astype(int),
+    'spo2': lambda s: (s < spo2_threshold).any().astype(int)
+}).reset_index()
 
-# Initialize a dictionary to store patient flags
-patient_flags = {}
+# Merge flags with labels
+features_df = pd.merge(flags_df, train_labels_df, on='patient_id', how='left')
 
-# Process each patient's data
-for patient_id in train_demos_df['patient_id'].unique():
-    patient_data = train_signs_df[train_signs_df['patient_id'] == patient_id]
-    hr_flag = resp_flag = nbp_sys_flag = spo2_flag = 0
-    
-    # Existing checks for heart rate and respiratory rate
-    if not patient_data[patient_data['heartrate'].notna() & ((patient_data['heartrate'] < healthy_hr_min) | (patient_data['heartrate'] > healthy_hr_max))].empty:
-        hr_flag = 1
-    if not patient_data[patient_data['resp'].notna() & ((patient_data['resp'] < healthy_resp_min) | (patient_data['resp'] > healthy_resp_max))].empty:
-        resp_flag = 1
-    # New check for NBP Sys
-    if not patient_data[patient_data['nbpsys'].notna() & ((patient_data['nbpsys'] < healthy_nbp_sys_min) | (patient_data['nbpsys'] > healthy_nbp_sys_max))].empty:
-        nbp_sys_flag = 1
-    # New check for SpO2
-    if not patient_data[patient_data['spo2'].notna() & (patient_data['spo2'] < spo2_threshold)].empty:
-        spo2_flag = 1
+# Prepare features and labels for modeling
+X = features_df[['heartrate', 'resp', 'nbpsys', 'spo2']].to_numpy()
+y = features_df['label'].to_numpy().astype(int)
 
-    # Store flags for each patient
-    patient_flags[patient_id] = {
-        'hr_flag': hr_flag,
-        'resp_flag': resp_flag,
-        'nbp_sys_flag': nbp_sys_flag,
-        'spo2_flag': spo2_flag
-    }
-
-# Create a list of features and labels
-features = []
-labels = []
-
-for patient_id in train_demos_df['patient_id'].unique():
-    flags = patient_flags.get(patient_id, {'hr_flag': 0, 'resp_flag': 0, 'nbp_sys_flag': 0, 'spo2_flag': 0})
-    label = train_labels_df[train_labels_df['patient_id'] == patient_id]['label'].iloc[0]  # Ensure correct label column name
-    features.append([flags['hr_flag'], flags['resp_flag'], flags['nbp_sys_flag'], flags['spo2_flag']])
-    labels.append(label)
-
-# Convert lists to NumPy arrays for modeling
-X = np.array(features)
-y = np.array(labels, dtype=int)
-
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Split the data for internal validation
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train the model
-model = LogisticRegression()
+model = LogisticRegression(max_iter=1000)  # Increase max_iter if needed
 model.fit(X_train, y_train)
 
-# Predict and evaluate
-y_pred_proba = model.predict_proba(X_test)[:, 1]
-auroc_score = roc_auc_score(y_test, y_pred_proba)
-
-print("AUROC Score:", auroc_score)
+# Evaluate the model on the validation set
+y_val_pred_proba = model.predict_proba(X_val)[:, 1]
+val_auroc_score = roc_auc_score(y_val, y_val_pred_proba)
+print("Validation AUROC Score:", val_auroc_score)
