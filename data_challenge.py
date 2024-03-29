@@ -32,6 +32,10 @@ healthy_nbp_sys_min, healthy_nbp_sys_max = 90, 140
 spo2_threshold = 90
 healthy_nbpdia_min, healthy_nbpdia_max = 70, 90
 nbpmean_threshold_min, nbpmean_threshold_max = 70, 95 
+aniongap_normal_min, aniongap_normal_max = 3, 12
+bicarbonate_normal_min, bicarbonate_normal_max = 22, 29
+chloride_normal_min, chloride_normal_max = 96, 107
+creatine_normal_min, creatine_normal_max = 0.6, 1.2
 
 # Process training data to calculate flags
 flags_df = train_signs_df.groupby('patient_id').agg({
@@ -40,7 +44,12 @@ flags_df = train_signs_df.groupby('patient_id').agg({
     'nbpsys': lambda nbp: ((nbp < healthy_nbp_sys_min) | (nbp > healthy_nbp_sys_max)).any().astype(int),
     'spo2': lambda s: (s < spo2_threshold).any().astype(int),
     'nbpdia': lambda dia: ((dia < healthy_nbpdia_min) | (dia > healthy_nbpdia_max)).any().astype(int), 
-    'nbpmean': lambda mean: ((mean < nbpmean_threshold_min) | (mean > nbpmean_threshold_max)).any().astype(int) 
+    'nbpmean': lambda mean: ((mean < nbpmean_threshold_min) | (mean > nbpmean_threshold_max)).any().astype(int),
+    'aniongap': lambda ag: ((ag < aniongap_normal_min) | (ag > aniongap_normal_max)).any().astype(int) ,
+    'bicarbonate': lambda bic: ((bic < bicarbonate_normal_min) | (bic > bicarbonate_normal_max)).any().astype(int),
+    'chloride': lambda cl: ((cl < chloride_normal_min) | (cl > chloride_normal_max)).any().astype(int),
+    'creatinine': lambda cr: ((cr < creatine_normal_min) | (cr > creatine_normal_max)).any().astype(int),
+
 }).reset_index()
 
 # Merge flags with labels
@@ -53,7 +62,11 @@ vital_counts_df = train_signs_df.groupby('patient_id').agg({
     'nbpsys': 'count',
     'spo2': 'count',
     'nbpdia': 'count',
-    'nbpmean': 'count'
+    'nbpmean': 'count',
+    'aniongap': 'count',
+    'bicarbonate': 'count',
+    'chloride': 'count',
+    'creatinine': 'count',
 }).reset_index()
 
 # Sum the counts to get a total measure count per patient
@@ -85,7 +98,7 @@ train_demos_df = pd.get_dummies(train_demos_df, columns=['insurance', 'marital_s
 features_df = pd.merge(features_df, train_demos_df.drop(['admittime'], axis=1), on='patient_id', how='left')
 
 # Prepare features and labels for modeling
-X_columns = ['heartrate', 'resp', 'nbpsys', 'spo2', 'nbpdia', 'nbpmean', 'age', 'gender', 'admit_hour', 'admit_month', 'total_vital_measures'] + \
+X_columns = ['heartrate', 'resp', 'nbpsys', 'spo2', 'nbpdia', 'nbpmean', 'aniongap', 'bicarbonate', 'chloride', 'creatinine', 'age', 'gender', 'admit_hour', 'admit_month', 'total_vital_measures'] + \
             [col for col in features_df.columns if col.startswith('insurance_') or col.startswith('marital_status_') or col.startswith('ethnicity_')]
 X = features_df[X_columns].to_numpy()
 y = features_df['label'].to_numpy().astype(int)
