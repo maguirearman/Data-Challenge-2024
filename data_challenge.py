@@ -6,6 +6,10 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.metrics import roc_auc_score
 
 
 # Load the training data
@@ -104,3 +108,39 @@ log_reg_model.fit(X_train_scaled, y_train)
 y_val_pred_proba = log_reg_model.predict_proba(X_val_scaled)[:, 1]
 val_auroc_score = roc_auc_score(y_val, y_val_pred_proba)
 print(f"Logistic Regression Validation AUROC Score: {val_auroc_score:.4f}")
+
+
+# Prepare a pipeline for scaling and Logistic Regression
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('log_reg', LogisticRegression())
+])
+
+# Parameters grid for Logistic Regression
+param_grid = {
+    'log_reg__C': np.logspace(-4, 4, 20),
+    'log_reg__solver': ['liblinear']  # 'liblinear' is a good choice for small datasets and binary classification
+}
+
+# Setup GridSearchCV
+grid_search = GridSearchCV(pipeline, param_grid, cv=5, scoring='roc_auc')
+grid_search.fit(X_train, y_train)
+
+# Evaluate the best model from grid search
+best_model = grid_search.best_estimator_
+y_val_pred_proba = best_model.predict_proba(X_val)[:, 1]
+val_auroc_score = roc_auc_score(y_val, y_val_pred_proba)
+print(f"Logistic Regression Best Model Validation AUROC Score: {val_auroc_score:.4f}")
+
+# Define other models for comparison
+models = {
+    'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42),
+    'GBM (Gradient Boosting)': GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
+}
+
+# Iterate over models, train, predict, and evaluate
+for name, model in models.items():
+    model.fit(X_train_scaled, y_train)  # Assuming scaling is beneficial
+    y_val_pred_proba = model.predict_proba(X_val_scaled)[:, 1]  # Probability estimates
+    val_auroc_score = roc_auc_score(y_val, y_val_pred_proba)
+    print(f"{name} Validation AUROC Score: {val_auroc_score:.4f}")
