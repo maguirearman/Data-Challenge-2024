@@ -36,6 +36,16 @@ aniongap_normal_min, aniongap_normal_max = 3, 12
 bicarbonate_normal_min, bicarbonate_normal_max = 22, 29
 chloride_normal_min, chloride_normal_max = 96, 107
 creatine_normal_min, creatine_normal_max = 0.6, 1.2
+calcium_normal_min, calcium_normal_max = 8.5, 10.4
+glucose_normal_min, glucose_normal_max = 70, 140
+hematocrit_normal_min, hematocrit_normal_max = 38.3, 48.6
+hemoglobin_normal_min, hemoglobin_normal_max = 13.5, 17.5
+mch_normal_min, mch_normal_max = 27, 33
+mcv_normal_min, mcv_normal_max = 80, 96
+magnesium_normal_min, magnesium_normal_max = 1.7, 2.2
+phosphate_normal_min, phosphate_normal_max = 2.5, 4.5
+platelet_normal_min, platelet_normal_max = 150, 450
+potassium_normal_min, potassium_normal_max = 3.5, 5.2
 
 # Process training data to calculate flags
 flags_df = train_signs_df.groupby('patient_id').agg({
@@ -49,6 +59,16 @@ flags_df = train_signs_df.groupby('patient_id').agg({
     'bicarbonate': lambda bic: ((bic < bicarbonate_normal_min) | (bic > bicarbonate_normal_max)).any().astype(int),
     'chloride': lambda cl: ((cl < chloride_normal_min) | (cl > chloride_normal_max)).any().astype(int),
     'creatinine': lambda cr: ((cr < creatine_normal_min) | (cr > creatine_normal_max)).any().astype(int),
+    'calcium': lambda ca: ((ca < calcium_normal_min) | (ca > calcium_normal_max)).any().astype(int),
+    'glucose': lambda glu: ((glu < glucose_normal_min) | (glu > glucose_normal_max)).any().astype(int),
+    'hematocrit': lambda hct: ((hct < hematocrit_normal_min) | (hct > hematocrit_normal_max)).any().astype(int),
+    'hemoglobin': lambda hgb: ((hgb < hemoglobin_normal_min) | (hgb > hemoglobin_normal_max)).any().astype(int),
+    'mch': lambda mch: ((mch < mch_normal_min) | (mch > mch_normal_max)).any().astype(int),
+    'mcv': lambda mcv: ((mcv < mcv_normal_min) | (mcv > mcv_normal_max)).any().astype(int),
+    'magnesium': lambda mg: ((mg < magnesium_normal_min) | (mg > magnesium_normal_max)).any().astype(int),
+    'phosphate': lambda phos: ((phos < phosphate_normal_min) | (phos > phosphate_normal_max)).any().astype(int),
+    'platelet': lambda plt: ((plt < platelet_normal_min) | (plt > platelet_normal_max)).any().astype(int),
+    'potassium': lambda k: ((k < potassium_normal_min) | (k > potassium_normal_max)).any().astype(int)
 
 }).reset_index()
 
@@ -67,6 +87,16 @@ vital_counts_df = train_signs_df.groupby('patient_id').agg({
     'bicarbonate': 'count',
     'chloride': 'count',
     'creatinine': 'count',
+    'calcium': 'count',
+    'glucose': 'count',
+    'hematocrit': 'count',
+    'hemoglobin': 'count',
+    'mch': 'count',
+    'mcv': 'count',
+    'magnesium': 'count',
+    'phosphate': 'count',
+    'platelet': 'count',
+    'potassium': 'count'
 }).reset_index()
 
 # Sum the counts to get a total measure count per patient
@@ -98,7 +128,7 @@ train_demos_df = pd.get_dummies(train_demos_df, columns=['insurance', 'marital_s
 features_df = pd.merge(features_df, train_demos_df.drop(['admittime'], axis=1), on='patient_id', how='left')
 
 # Prepare features and labels for modeling
-X_columns = ['heartrate', 'resp', 'nbpsys', 'spo2', 'nbpdia', 'nbpmean', 'aniongap', 'bicarbonate', 'chloride', 'creatinine', 'age', 'gender', 'admit_hour', 'admit_month', 'total_vital_measures'] + \
+X_columns = ['heartrate', 'resp', 'nbpsys', 'spo2', 'nbpdia', 'nbpmean', 'aniongap', 'bicarbonate', 'chloride', 'creatinine', 'calcium', 'glucose', 'hematocrit', 'hemoglobin', 'mch', 'magnesium', 'phosphate', 'platelet', 'potassium', 'age', 'gender', 'admit_hour', 'admit_month', 'total_vital_measures'] + \
             [col for col in features_df.columns if col.startswith('insurance_') or col.startswith('marital_status_') or col.startswith('ethnicity_')]
 X = features_df[X_columns].to_numpy()
 y = features_df['label'].to_numpy().astype(int)
