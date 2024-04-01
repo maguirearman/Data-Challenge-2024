@@ -35,17 +35,17 @@ nbpmean_threshold_min, nbpmean_threshold_max = 70, 95
 aniongap_normal_min, aniongap_normal_max = 3, 12
 bicarbonate_normal_min, bicarbonate_normal_max = 22, 29
 chloride_normal_min, chloride_normal_max = 96, 107
-creatine_normal_min, creatine_normal_max = 0.6, 1.2
+creatine_normal_min, creatine_normal_max = 0.6, 1.3
 calcium_normal_min, calcium_normal_max = 8.5, 10.4
-glucose_normal_min, glucose_normal_max = 70, 140
-hematocrit_normal_min, hematocrit_normal_max = 38.3, 48.6
-hemoglobin_normal_min, hemoglobin_normal_max = 13.5, 17.5
-mch_normal_min, mch_normal_max = 27, 33
-mcv_normal_min, mcv_normal_max = 80, 96
-magnesium_normal_min, magnesium_normal_max = 1.7, 2.2
+glucose_normal_min, glucose_normal_max = 100, 126
+hematocrit_normal_min, hematocrit_normal_max = 38.3, 50.0
+hemoglobin_normal_min, hemoglobin_normal_max = 12.0, 17.5
+mch_normal_min, mch_normal_max = 27, 31
+mcv_normal_min, mcv_normal_max = 80, 100
+magnesium_normal_min, magnesium_normal_max = 0.5, 3.0
 phosphate_normal_min, phosphate_normal_max = 2.5, 4.5
 platelet_normal_min, platelet_normal_max = 150, 450
-potassium_normal_min, potassium_normal_max = 3.5, 5.2
+potassium_normal_min, potassium_normal_max = 3.0, 6.0
 
 # Process training data to calculate flags
 flags_df = train_signs_df.groupby('patient_id').agg({
