@@ -124,7 +124,12 @@ train_demos_df['gender'] = train_demos_df['gender'].map({'M': 1, 'F': 0})
 # Note: Consider filling missing values if any
 train_demos_df = pd.get_dummies(train_demos_df, columns=['insurance', 'marital_status', 'ethnicity'], drop_first=True)
 
+# Pre process radiology data
+
+
+
 # Merge demographic features with clinical flags
+# TODO: Merge radio data vector as well
 features_df = pd.merge(features_df, train_demos_df.drop(['admittime'], axis=1), on='patient_id', how='left')
 
 # Prepare features and labels for modeling
