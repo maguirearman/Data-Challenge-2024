@@ -83,7 +83,7 @@ def main():
     #df = df.head(250)
     #*****************************************
 
-    #remove chart time, as it wont be a predictor in the model
+    #remove chart time, as it wont be a predictor in the model 
     df.drop(columns = ['charttime'], inplace=True)
 
     #Group by patient_id and aggregate note_type and note_seq
