@@ -51,7 +51,7 @@ def feature_vector(entries, medicalList):
     stemmer = PorterStemmer()
     
 
-    for text in entries:
+    for index, text in enumerate(entries, start=1):
         words = word_tokenize(text)
         # Remove stop words and punctuation
         words = [word for word in words if word.lower() not in stopwords.words('english')]
@@ -69,7 +69,9 @@ def feature_vector(entries, medicalList):
                 newRow.append(1)
             else:
                 newRow[wordList.index(stem)]+=1
-        matrix.append(newRow)                   
+        matrix.append(newRow)  
+        # Print progress for each patient processed
+        print(f"Processed patient {index}/{len(entries)}")                 
 
     #normalize the row lengths
     count = len(wordList)
@@ -142,7 +144,7 @@ def main():
     wordMatrix = feature_vector(df_grouped['text'], medicalList)
     
     #prune it so the ouput isnt insane
-    wordMatrix = pruneByWordCount(wordMatrix, 250)
+    wordMatrix = pruneByWordCount(wordMatrix, 75)
     
     #replace each text entry with its corresponding row in the wordMatrix
     wordsDF = pd.DataFrame(wordMatrix)
