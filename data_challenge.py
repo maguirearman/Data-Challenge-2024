@@ -47,7 +47,7 @@ phosphate_normal_min, phosphate_normal_max = 2.5, 4.5
 platelet_normal_min, platelet_normal_max = 150, 450
 potassium_normal_min, potassium_normal_max = 3.0, 6.0
 
-# Process training data to calculate flags
+# Process training data to calculate flags based on thresholds
 flags_df = train_signs_df.groupby('patient_id').agg({
     'heartrate': lambda hr: ((hr < healthy_hr_min) | (hr > healthy_hr_max)).any().astype(int),
     'resp': lambda r: ((r < healthy_resp_min) | (r > healthy_resp_max)).any().astype(int),
@@ -121,17 +121,16 @@ train_demos_df['admit_month'] = train_demos_df['admittime'].dt.month
 train_demos_df['gender'] = train_demos_df['gender'].map({'M': 1, 'F': 0})
 
 # One-hot encode categorical variables ('insurance', 'marital_status', 'ethnicity')
-# Note: Consider filling missing values if any
 train_demos_df = pd.get_dummies(train_demos_df, columns=['insurance', 'marital_status', 'ethnicity'], drop_first=True)
 
 # Pre process radiology data
-
+# Done in radio.py
 # Load the radiology feature vector CSV
 radiology_features_df = pd.read_csv('radiology_feature_vector.csv')
 
+# Set k to the number of features to keep
 k=500
-# Merge demographic features with clinical flags
-# TODO: Merge radio data vector as well
+# Merge radio data vector as well
 
 features_df = pd.merge(features_df, radiology_features_df, on='patient_id', how='left')
 radiology_feature_columns = [str(i) for i in range(0, k)]  # Adjust this range based on your feature columns
@@ -186,7 +185,7 @@ grid_search.fit(X_train, y_train)
 best_model = grid_search.best_estimator_
 y_val_pred_proba = best_model.predict_proba(X_val)[:, 1]
 val_auroc_score = roc_auc_score(y_val, y_val_pred_proba)
-print(f"Logistic Regression Best Model Validation AUROC Score: {val_auroc_score:.4f}")
+print(f"Logistic Regression Best Model (with GridSearch) Validation AUROC Score: {val_auroc_score:.4f}")
 
 # Define other models for comparison
 models = {
