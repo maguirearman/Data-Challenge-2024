@@ -35,10 +35,15 @@ from sklearn.metrics import (
 
 
 
-
+def createMedical(file):
+    term = file.readline()
+    medicalList = []
+    while term:
+        medicalList.append(term.lower())
+    return medicalList
 #This function takes in text
 #It returns the feature vector, and updates the wordlist to contain all word stems
-def feature_vector(entries): 
+def feature_vector(entries, medicalList): 
     print("\ncreating feature vector...")
     matrix = []
     wordList = []
@@ -50,8 +55,8 @@ def feature_vector(entries):
         # Remove stop words and punctuation
         words = [word for word in words if word.lower() not in stopwords.words('english')]
         words = [word for word in words if word.lower() not in string.punctuation]
-        
-        #TODO: Remove words not in medical dictionary (need to find a library for this)
+        words = [word for word in words if word.lower() not in medicalList]
+
         newRow = [0] * (len(wordList))
         
         #If the word is in the word list, increment the correct column in feature vector, 
@@ -112,6 +117,9 @@ def pruneByWordCount(featureVector, k):
 def main():
     #create df
     df = pd.read_csv("train/train_radiology.csv")
+    
+    #create medical list
+    createMedical("medicalList.txt")
     
     #***************REMOVE THIS THIS IS ONLY FOR RUN TIME / TESTING PURPOSES****************************
     df = df.head(250)
