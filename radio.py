@@ -32,7 +32,7 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 
-
+# Creates a list of medical terms from a file
 def createMedical(filename):
     extractedTerms = []
     with open(filename, 'r') as file:
@@ -144,7 +144,7 @@ def main():
     wordMatrix = feature_vector(df_grouped['text'], medicalList)
     
     #prune it so the ouput isnt insane
-    wordMatrix = pruneByWordCount(wordMatrix, 250)
+    wordMatrix = pruneByWordCount(wordMatrix, 500)
     
     #replace each text entry with its corresponding row in the wordMatrix
     wordsDF = pd.DataFrame(wordMatrix)

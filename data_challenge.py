@@ -129,12 +129,12 @@ train_demos_df = pd.get_dummies(train_demos_df, columns=['insurance', 'marital_s
 # Load the radiology feature vector CSV
 radiology_features_df = pd.read_csv('radiology_feature_vector.csv')
 
-
+k=500
 # Merge demographic features with clinical flags
 # TODO: Merge radio data vector as well
 
 features_df = pd.merge(features_df, radiology_features_df, on='patient_id', how='left')
-radiology_feature_columns = [str(i) for i in range(0, 250)]  # Adjust this range based on your feature columns
+radiology_feature_columns = [str(i) for i in range(0, k)]  # Adjust this range based on your feature columns
 
 features_df = pd.merge(features_df, train_demos_df.drop(['admittime'], axis=1), on='patient_id', how='left')
 
