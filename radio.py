@@ -72,7 +72,41 @@ def feature_vector(entries):
           m.append(0)
     print("Finished!\n")
     return matrix
+#top K words
+def pruneByWordCount(featureVector, k):
+    
+    prunedRow = []
 
+    prunedMatrix=[]
+    # Calculate the number of total unique words
+    num_columns = len(featureVector[0])
+    # Initialize a list to store the sums of columns
+    column_sums = [0] * num_columns
+
+    # Iterate over each row
+    for row in featureVector:
+        # Iterate over each column index
+        for i, value in enumerate(row):
+            column_sums[i] += value   
+    
+    #calculate top words
+    freqWordsIndex = list(range(num_columns))
+    # Sort the column indexes based on their corresponding sums in descending order
+    sorted_indexes = sorted(freqWordsIndex, key=lambda i: column_sums[i], reverse=True)
+
+    # Get the indexes of the highest K sums
+    freq = sorted_indexes[:k]
+    
+  
+   
+    for item in range(len(featureVector)):
+        prunedRow = []
+        for row in range(len(freq)):
+            prunedRow.append(featureVector[item][freq[row]])
+        prunedMatrix.append(prunedRow)
+
+    
+    return prunedMatrix
 
 
 def main():
@@ -80,7 +114,7 @@ def main():
     df = pd.read_csv("train/train_radiology.csv")
     
     #***************REMOVE THIS THIS IS ONLY FOR RUN TIME / TESTING PURPOSES****************************
-    #df = df.head(250)
+    df = df.head(250)
     #*****************************************
 
     #remove chart time, as it wont be a predictor in the model 
@@ -96,6 +130,9 @@ def main():
 
     #change text to be a feature vector of word counts
     wordMatrix = feature_vector(df_grouped['text'])
+    
+    #prune it so the ouput isnt insane
+    wordMatrix = pruneByWordCount(wordMatrix, 500)
     
     #replace each text entry with its corresponding row in the wordMatrix
     wordsDF = pd.DataFrame(wordMatrix)
