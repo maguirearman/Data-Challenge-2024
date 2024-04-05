@@ -126,15 +126,23 @@ train_demos_df = pd.get_dummies(train_demos_df, columns=['insurance', 'marital_s
 
 # Pre process radiology data
 
+# Load the radiology feature vector CSV
+radiology_features_df = pd.read_csv('radiology_feature_vector.csv')
 
 
 # Merge demographic features with clinical flags
 # TODO: Merge radio data vector as well
+
+features_df = pd.merge(features_df, radiology_features_df, on='patient_id', how='left')
+radiology_feature_columns = [str(i) for i in range(0, 250)]  # Adjust this range based on your feature columns
+
 features_df = pd.merge(features_df, train_demos_df.drop(['admittime'], axis=1), on='patient_id', how='left')
 
 # Prepare features and labels for modeling
 X_columns = ['heartrate', 'resp', 'nbpsys', 'spo2', 'nbpdia', 'nbpmean', 'aniongap', 'bicarbonate', 'chloride', 'creatinine', 'calcium', 'glucose', 'hematocrit', 'hemoglobin', 'mch', 'magnesium', 'phosphate', 'platelet', 'potassium', 'age', 'gender', 'admit_hour', 'admit_month', 'total_vital_measures'] + \
-            [col for col in features_df.columns if col.startswith('insurance_') or col.startswith('marital_status_') or col.startswith('ethnicity_')]
+            [col for col in features_df.columns if col.startswith('insurance_') or col.startswith('marital_status_') or col.startswith('ethnicity_')]  + \
+            radiology_feature_columns
+
 X = features_df[X_columns].to_numpy()
 y = features_df['label'].to_numpy().astype(int)
 

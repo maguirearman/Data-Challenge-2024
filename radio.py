@@ -124,7 +124,7 @@ def main():
     
     print(medicalList)
     #***************REMOVE THIS THIS IS ONLY FOR RUN TIME / TESTING PURPOSES****************************
-    df = df.head(250)
+    # df = df.head(250)
     #*****************************************
 
     #remove chart time, as it wont be a predictor in the model 
@@ -142,7 +142,7 @@ def main():
     wordMatrix = feature_vector(df_grouped['text'], medicalList)
     
     #prune it so the ouput isnt insane
-    wordMatrix = pruneByWordCount(wordMatrix, 500)
+    wordMatrix = pruneByWordCount(wordMatrix, 250)
     
     #replace each text entry with its corresponding row in the wordMatrix
     wordsDF = pd.DataFrame(wordMatrix)
@@ -153,6 +153,10 @@ def main():
     df_combined['note_type'] = df_combined['note_type'].replace({'RR': 1, 'AR': 2, 'RRAR': 3})
     
     print(df_combined.head(20))
+
+    # Export to csv
+    df_combined.to_csv('radiology_feature_vector.csv', index=False)
+
 
 
     sys.exit(0)
