@@ -33,14 +33,15 @@ from sklearn.metrics import (
 )
 
 
+def createMedical(filename):
+    extractedTerms = []
+    with open(filename, 'r') as file:
+        for line in file:
+            if '-' in line:  # Check if the line contains a hyphen
+                term, _ = line.split('-', 1)  # Split the line at the first hyphen and extract the term
+                extractedTerms.append(term.strip().lower())  # Strip whitespace, convert to lowercase, and add to the list
+    return extractedTerms
 
-
-def createMedical(file):
-    term = file.readline()
-    medicalList = []
-    while term:
-        medicalList.append(term.lower())
-    return medicalList
 #This function takes in text
 #It returns the feature vector, and updates the wordlist to contain all word stems
 def feature_vector(entries, medicalList): 
@@ -118,9 +119,10 @@ def main():
     #create df
     df = pd.read_csv("train/train_radiology.csv")
     
-    #create medical list
-    createMedical("medicalList.txt")
+
+    medicalList = createMedical("medical_terms_and_defs.txt")
     
+    print(medicalList)
     #***************REMOVE THIS THIS IS ONLY FOR RUN TIME / TESTING PURPOSES****************************
     df = df.head(250)
     #*****************************************
@@ -137,7 +139,7 @@ def main():
     df_grouped = df_grouped.reset_index()
 
     #change text to be a feature vector of word counts
-    wordMatrix = feature_vector(df_grouped['text'])
+    wordMatrix = feature_vector(df_grouped['text'], medicalList)
     
     #prune it so the ouput isnt insane
     wordMatrix = pruneByWordCount(wordMatrix, 500)
