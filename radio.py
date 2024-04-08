@@ -1,36 +1,9 @@
 import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
-from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.pipeline import Pipeline
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.metrics import roc_auc_score
-import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 import string
 import sys
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.model_selection import train_test_split
-from sklearn import svm
-from sklearn import metrics
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import roc_auc_score
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
-import numpy as np
-import time
-from sklearn.metrics import (
-    confusion_matrix,
-)
 
 # Creates a list of medical terms from a file
 def createMedical(filename):
@@ -123,11 +96,6 @@ def main():
     
 
     medicalList = createMedical("medical_terms_and_defs.txt")
-    
-    print(medicalList)
-    #***************REMOVE THIS THIS IS ONLY FOR RUN TIME / TESTING PURPOSES****************************
-    # df = df.head(250)
-    #*****************************************
 
     #remove chart time, as it wont be a predictor in the model 
     df.drop(columns = ['charttime'], inplace=True)

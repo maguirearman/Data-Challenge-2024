@@ -177,5 +177,77 @@ test_radiology_df = pd.read_csv("test/test_radiology.csv")
 
 # Use test data to predict mortality
 
+# Create feature vector for test data
+# Use the same columns as the training data
+X_test_columns = X_columns
 
-# generate output csv (CSV file with `patient_id, probability` as headers, each line for patient ID and the probability of the patient's in-hospital mortality.)
+# Preprocess the test data
+# Start with signs data
+test_flags_df = test_signs_df.groupby('patient_id').agg({
+    'heartrate': lambda hr: ((hr < healthy_hr_min) | (hr > healthy_hr_max)).any().astype(int),
+    'resp': lambda r: ((r < healthy_resp_min) | (r > healthy_resp_max)).any().astype(int),
+    'nbpsys': lambda nbp: ((nbp < healthy_nbp_sys_min) | (nbp > healthy_nbp_sys_max)).any().astype(int),
+    'spo2': lambda s: (s < spo2_threshold).any().astype(int),
+    'nbpdia': lambda dia: ((dia < healthy_nbpdia_min) | (dia > healthy_nbpdia_max)).any().astype(int), 
+    'nbpmean': lambda mean: ((mean < nbpmean_threshold_min) | (mean > nbpmean_threshold_max)).any().astype(int),
+    'aniongap': lambda ag: ((ag < aniongap_normal_min) | (ag > aniongap_normal_max)).any().astype(int) ,
+    'bicarbonate': lambda bic: ((bic < bicarbonate_normal_min) | (bic > bicarbonate_normal_max)).any().astype(int),
+    'chloride': lambda cl: ((cl < chloride_normal_min) | (cl > chloride_normal_max)).any().astype(int),
+    'creatinine': lambda cr: ((cr < creatine_normal_min) | (cr > creatine_normal_max)).any().astype(int),
+    'calcium': lambda ca: ((ca < calcium_normal_min) | (ca > calcium_normal_max)).any().astype(int),
+    'glucose': lambda glu: ((glu < glucose_normal_min) | (glu > glucose_normal_max)).any().astype(int),
+    'hematocrit': lambda hct: ((hct < hematocrit_normal_min) | (hct > hematocrit_normal_max)).any().astype(int),
+    'hemoglobin': lambda hgb: ((hgb < hemoglobin_normal_min) | (hgb > hemoglobin_normal_max)).any().astype(int),
+    'mch': lambda mch: ((mch < mch_normal_min) | (mch > mch_normal_max)).any().astype(int),
+    'mcv': lambda mcv: ((mcv < mcv_normal_min) | (mcv > mcv_normal_max)).any().astype(int),
+    'magnesium': lambda mg: ((mg < magnesium_normal_min) | (mg > magnesium_normal_max)).any().astype(int),
+    'phosphate': lambda phos: ((phos < phosphate_normal_min) | (phos > phosphate_normal_max)).any().astype(int),
+    'platelet': lambda plt: ((plt < platelet_normal_min) | (plt > platelet_normal_max)).any().astype(int),
+    'potassium': lambda k: ((k < potassium_normal_min) | (k > potassium_normal_max)).any().astype(int)
+
+}).reset_index()
+test_features_df = test_flags_df
+
+# Preprocess demographic data
+test_demos_df['admittime'] = pd.to_datetime(test_demos_df['admittime'])
+
+# Extract useful features from 'admittime' (e.g., hour of admission, month)
+test_demos_df['admit_hour'] = test_demos_df['admittime'].dt.hour
+test_demos_df['admit_month'] = test_demos_df['admittime'].dt.month
+
+# Convert 'gender' into a binary variable
+test_demos_df['gender'] = test_demos_df['gender'].map({'M': 1, 'F': 0})
+
+# One-hot encode categorical variables ('insurance', 'marital_status', 'ethnicity')
+test_demos_df = pd.get_dummies(test_demos_df, columns=['insurance', 'marital_status', 'ethnicity'], drop_first=True)
+
+# Merge the demographic data with the features DataFrame
+test_features_df = pd.merge(test_features_df, test_demos_df.drop(['admittime'], axis=1), on='patient_id', how='left')
+
+# Pre process radiology data
+
+test_radiology_features_df = pd.read_csv('test_radiology_feature_vector.csv')
+test_radiology_features_df.fillna(0, inplace=True)
+# Merge radio data vector with the features DataFrame
+test_features_df = pd.merge(test_features_df, test_radiology_features_df, on='patient_id', how='left')
+
+# test_features_df.fillna(0, inplace=True)  # Assuming missing values are handled
+
+# Ensure test features align with the model's expectations
+X_test = test_features_df[X_test_columns].to_numpy()
+X_test_scaled = scaler.transform(X_test)  # Use the same scaler as for training data
+
+# Predict probabilities on the test set using the trained model
+y_test_pred_proba = models['GBM (Gradient Boosting)'].predict_proba(X_test_scaled)[:, 1]
+
+# Create submission DataFrame
+submission_df = pd.DataFrame({
+    'patient_id': test_features_df['patient_id'],
+    'probability': y_test_pred_proba
+})
+
+# Save the submission DataFrame to a CSV file
+submission_file_path = 'submission.csv'
+submission_df.to_csv(submission_file_path, index=False)
+
+print(f'Submission file saved to {submission_file_path}')
