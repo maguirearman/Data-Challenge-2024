@@ -129,7 +129,7 @@ train_demos_df = pd.get_dummies(train_demos_df, columns=['insurance', 'marital_s
 radiology_features_df = pd.read_csv('radiology_feature_vector.csv')
 
 # Set k to the number of features to keep
-k=500
+k=1000
 # Merge radio data vector as well
 
 features_df = pd.merge(features_df, radiology_features_df, on='patient_id', how='left')

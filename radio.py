@@ -144,7 +144,7 @@ def main():
     wordMatrix = feature_vector(df_grouped['text'], medicalList)
     
     #prune it so the ouput isnt insane
-    wordMatrix = pruneByWordCount(wordMatrix, 500)
+    wordMatrix = pruneByWordCount(wordMatrix, 1000)
     
     #replace each text entry with its corresponding row in the wordMatrix
     wordsDF = pd.DataFrame(wordMatrix)
