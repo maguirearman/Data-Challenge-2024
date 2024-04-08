@@ -230,9 +230,6 @@ test_radiology_features_df = pd.read_csv('test_radiology_feature_vector.csv')
 test_radiology_features_df.fillna(0, inplace=True)
 # Merge radio data vector with the features DataFrame
 test_features_df = pd.merge(test_features_df, test_radiology_features_df, on='patient_id', how='left')
-
-# test_features_df.fillna(0, inplace=True)  # Assuming missing values are handled
-
 # Ensure test features align with the model's expectations
 X_test = test_features_df[X_test_columns].to_numpy()
 X_test_scaled = scaler.transform(X_test)  # Use the same scaler as for training data
