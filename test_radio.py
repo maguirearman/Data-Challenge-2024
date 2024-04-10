@@ -5,6 +5,8 @@ from nltk.corpus import stopwords
 import string
 import sys
 
+# File used to generate the feature vector for the radiology data of the test data
+
 # Creates a list of medical terms from a file
 def createMedical(filename):
     extractedTerms = []
@@ -121,13 +123,9 @@ def main():
     
     #Change note type to be of levels 1, 2, or 3 depending on type
     df_combined['note_type'] = df_combined['note_type'].replace({'RR': 1, 'AR': 2, 'RRAR': 3})
-    
-    print(df_combined.head(20))
 
-    # Export to csv
+    # Export to csv (specifically test feature vector)
     df_combined.to_csv('test_radiology_feature_vector.csv', index=False)
-
-
 
     sys.exit(0)
   

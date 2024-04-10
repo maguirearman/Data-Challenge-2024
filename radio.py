@@ -5,6 +5,8 @@ from nltk.corpus import stopwords
 import string
 import sys
 
+# File used to generate the feature vector for the radiology data
+
 # Creates a list of medical terms from a file
 def createMedical(filename):
     extractedTerms = []
@@ -53,7 +55,8 @@ def feature_vector(entries, medicalList):
           m.append(0)
     print("Finished!\n")
     return matrix
-#top K words
+
+#This function takes in a feature vector and a number k and prunes the feature vector to only include the top k words
 def pruneByWordCount(featureVector, k):
     
     prunedRow = []
@@ -78,8 +81,7 @@ def pruneByWordCount(featureVector, k):
     # Get the indexes of the highest K sums
     freq = sorted_indexes[:k]
     
-  
-   
+    # Prune the feature vector
     for item in range(len(featureVector)):
         prunedRow = []
         for row in range(len(freq)):
@@ -91,10 +93,11 @@ def pruneByWordCount(featureVector, k):
 
 
 def main():
-    #create df
+
+    # Load in radiology data
     df = pd.read_csv("train/train_radiology.csv")
     
-
+    # Load in medical terms and use function to create a list of medical terms
     medicalList = createMedical("medical_terms_and_defs.txt")
 
     #remove chart time, as it wont be a predictor in the model 
@@ -108,26 +111,22 @@ def main():
     # Reset index to have patient_id as a column
     df_grouped = df_grouped.reset_index()
 
-    #change text to be a feature vector of word counts
+    # Change text to be a feature vector of word counts
     wordMatrix = feature_vector(df_grouped['text'], medicalList)
     
-    #prune it so the ouput isnt insane
+    # Prune it so the we have the top 1000 words
     wordMatrix = pruneByWordCount(wordMatrix, 1000)
     
-    #replace each text entry with its corresponding row in the wordMatrix
+    # Replace each text entry with its corresponding row in the wordMatrix
     wordsDF = pd.DataFrame(wordMatrix)
     df_combined = pd.concat([df_grouped, wordsDF], axis=1)
     df_combined.drop(columns=['text'], inplace=True)
     
-    #Change note type to be of levels 1, 2, or 3 depending on type
+    # Change note type to be of levels 1, 2, or 3 depending on type
     df_combined['note_type'] = df_combined['note_type'].replace({'RR': 1, 'AR': 2, 'RRAR': 3})
-    
-    print(df_combined.head(20))
 
     # Export to csv
     df_combined.to_csv('radiology_feature_vector.csv', index=False)
-
-
 
     sys.exit(0)
   
