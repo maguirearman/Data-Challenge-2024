@@ -37,3 +37,12 @@
 - AUROC is used as the evaluation metric.
 - CSV file with `patient_id, probability` as headers, each line for patient ID and the probability of the patient's in-hospital mortality.
 - Please make sure the order of patients' IDs is the same as those in the label file.
+
+### Files in Directory
+
+- data_challenge.py: Main program where feature generation, model training, and output generation takes place
+- radio.py: Side program where radiology_feature_vectore.csv is generated
+- test_radio.py: Side program where test_radiology_feature_vectore.csv is generated 
+- medical_terms_and_defs.txt: The medical dictionary we used
+- submission.csv: Output csv file
+
