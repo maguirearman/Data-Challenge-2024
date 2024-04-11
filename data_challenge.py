@@ -5,6 +5,9 @@ from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import roc_auc_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split, GridSearchCV
 
 
 # 2024 Data Challenge (CSE 5243)
